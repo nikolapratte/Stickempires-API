@@ -3,7 +3,7 @@
 from BotBase import BotBase
 
 if __name__ == "__main__":
-    bot = BotBase((418, 145), (1482, 1018))
+    bot = BotBase((0, 0), (800, 600))
     bot.screen_record()
 
 """import cv2
