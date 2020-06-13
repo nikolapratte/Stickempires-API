@@ -1,7 +1,9 @@
+import asyncio
 import time
 
 import cv2
-from directkeys import PressKey
+from directkeys import PressKey, ReleaseKey
+from helpers import UnitType
 from hexkeys import HexKey
 import numpy as np
 from PIL import ImageGrab
@@ -22,26 +24,50 @@ class BotBase:
         self.topleft = topleft_coord
         self.botright = botright_coord
 
+    ### functions related to the inner workings of the bot
 
-    def screen_record(self):
+    async def screen_record(self):
         last_time = time.time()
 
         time.sleep(3)
         while True:
-            PressKey(HexKey["1"])
-            pyautogui.click()
-            time.sleep(1)
             # get current screen
             screen_coords = (self.topleft[0], self.topleft[1],self.botright[0], self.botright[1])
             screen = np.array(ImageGrab.grab(bbox=screen_coords))
-            
+            screen = cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)
+
             print(f"loop took {time.time() - last_time} seconds.")
             last_time = time.time()
-            # turn screen into edges screen
-            screen = process_img(screen)
-            cv2.imshow('window', screen)
+            # process the screen a bit
+            #screen = process_img(screen)
+            
+            grayscale = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
+            retval, threshold = cv2.threshold(screen, 55, 255, cv2.THRESH_BINARY)
+            #threshold = cv2.adaptiveThreshold(grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
+            #retval2, threshold = cv2.threshold(grayscale, 125, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+            # show the screen
+            cv2.imshow('original', screen)
+            cv2.imshow('Thresholded', threshold)
             #cv2.imshow('window', cv2.cvtColor(screen, cv2.COLOR_BGR2RGB))
             key = cv2.waitKey(25) & 0xFF
             if key == ord('q'):
                 cv2.destroyAllWindows()
                 break
+
+    
+    ### public functions (api interface)
+
+    def run(self) -> None:
+        """Starts up the bot."""
+        asyncio.run(self.screen_record())
+
+
+    async def build(self, unit: UnitType) -> None:
+        """Sends an order to build the provided unit.
+        Does not do anything if the unit cannot be purchased."""
+        val = HexKey[unit.value]
+
+        PressKey(val)
+        await asyncio.sleep(0.1)
+        ReleaseKey(val)
