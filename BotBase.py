@@ -63,7 +63,7 @@ class BotBase(abc.ABC):
             if self.state == "main":
                 await self.main_menu_loop()
             if self.state == "custom":
-                pass
+                await self.custom_menu_loop()
             if self.state == "play":
                 try:
                     # NOTE not sure if timeout will work, since asyncio wasn't interrupting
@@ -81,16 +81,7 @@ class BotBase(abc.ABC):
         assert self.state == "main", f"State is currently {self.state}, should be 'main' to run bot's main menu loop."
 
         if self.autoplay == AutoPlay.EasyChaos:
-            # wait until find the Custom Match button before continuing
-            res = None
-            while res is None:
-                res = await self.screen_find(ImageName["custom"])
-                await asyncio.sleep(1)
-            
-            x = res[0] + res[2]//2
-            y = res[1] + res[3]//2
-
-            await self.click((x, y))
+            await self.wait_click(ImageName["custom"])
 
             self.state = "custom"
 
@@ -100,9 +91,15 @@ class BotBase(abc.ABC):
         assert self.state == "custom", f"State is currently {self.state}, should be 'custom' to run bot's custom menu loop."
 
         if self.autoplay == AutoPlay.EasyChaos:
-            res = None
-            while res is None:
-                res = await self.screen_find()
+            await self.wait_click(ImageName["choose_map"], y_delta = 25)
+            await self.wait_click(ImageName["gates"])
+            # if a friend is online, easy chaos won't be default selection
+            if not await self.screen_find(ImageName["easy_chaos"]):
+                await self.wait_click(ImageName["choose_friend"], y_delta = 25)
+                await self.wait_click(ImageName["easy_chaos"])
+
+
+            self.state = "race_selection"
 
 
     async def click(self, loc: Tuple[int, int], delay: float = DEFAULT_CLICK_DELAY, left_click: bool = True) -> None:
@@ -116,7 +113,7 @@ class BotBase(abc.ABC):
             pyautogui.mouseUp(button='left')
 
 
-    async def screen_find(self, img_name: str, threshold: float = 0.95) -> (int, int, int, int):
+    async def screen_find(self, img_name: str, threshold: float = 0.9) -> (int, int, int, int):
         """Finds the given image and returns its x coord, y coord, width, and height.
         If a match cannot be found, returns None.
         If multiple matches are found, returns the first match.
@@ -132,12 +129,38 @@ class BotBase(abc.ABC):
         w, h = template.shape[::-1]
 
         res = cv2.matchTemplate(grayscale, template, cv2.TM_CCOEFF_NORMED)
-        threshold = 0.9
+        threshold = threshold
         loc = np.where(res >= threshold)
         
-        if loc[0]:
+        if loc[0].size > 0:
             # note that the first array in loc is y-coordinates, while the second array is x-coordinates
             return [loc[1][0], loc[0][0], w, h]
+
+    
+    async def find_click(self, img_name: str, x_delta: float = 0, y_delta: float = 0, threshold: float = 0.9) -> bool:
+        """Finds the given image and clicks on the center of it, or a point away from the center
+        by x_delta and y_delta. For example, will click on (100,100) if the image's center is there,
+        or (120, 120) if x_delta = 20 and y_delta = 20.
+        Returns True if successfully clicked, otherwise False.
+        """
+        res = await self.screen_find(img_name, threshold)
+
+        if res is None:
+            return False
+
+        x = res[0] + res[2]//2 + x_delta
+        y = res[1] + res[3]//2 + y_delta
+
+        await self.click((x, y))
+
+        return True
+
+    
+    async def wait_click(self, img_name: str, x_delta: float = 0, y_delta: float = 0, threshold: float = 0.9) -> None:
+        """Similar to find_click, but stalls with asyncio.sleep() until a click is successfully inputted on the
+        provided image."""
+        while not await self.find_click(img_name, x_delta = x_delta, y_delta = y_delta, threshold = threshold):
+            await asyncio.sleep(1)
 
 
     async def screen_record(self):

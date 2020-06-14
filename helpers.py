@@ -21,9 +21,13 @@ class UnitType(Enum):
 
 """The ImageName dictionary contains the filenames of images used by the bot."""
 ImageName = {
-    "choose_friend": "images/Custom Friend.PNG"
-    "choose_map": "images/Custom Map.PNG"
-    "custom": "images/Custom Match Button.PNG"
+    "choose_friend": "images/Choose Friend.PNG",
+    "choose_map": "images/Choose Map.PNG",
+    "custom": "images/Custom Match Button.PNG",
+
+    "easy_chaos": "images/Easy Chaos AI.PNG",
+
+    "gates": "images/Gates.PNG"
 }
 
 

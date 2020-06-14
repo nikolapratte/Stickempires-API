@@ -2,6 +2,7 @@ Types of Actions:
     Build(UnitType): Builds a unit of the given UnitType. Does nothing if one 
     does not have enough resources to make the unit.
 Types of states:
-    main: Main menu
     custom: Custom match menu
+    main: Main menu
     playing: In-game
+    race_selection: Race selection menu
