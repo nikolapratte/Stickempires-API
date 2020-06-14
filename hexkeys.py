@@ -3,5 +3,6 @@
 # NOTE didn't use enum since PressKey function (directkeys.py) requires integer
 
 HexKey = {
-    "1": 0x02
+    "1": 0x02,
+    "left_click": 0x100
 }

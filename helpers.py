@@ -2,6 +2,11 @@ from enum import Enum
 
 import cv2
 
+class AutoPlay(Enum):
+    """The AutoPlay enum represents autoplay options for the bot."""
+    EasyChaos = 1
+
+
 class UnitType(Enum):
     """The UnitType enum represents units that the bot can build (as Order)."""
     Miner = "1"
@@ -13,6 +18,13 @@ class UnitType(Enum):
     Ninja = "7"
     Albow = '8'
     Giant = '9'
+
+"""The ImageName dictionary contains the filenames of images used by the bot."""
+ImageName = {
+    "choose_friend": "images/Custom Friend.PNG"
+    "choose_map": "images/Custom Map.PNG"
+    "custom": "images/Custom Match Button.PNG"
+}
 
 
 def process_img(image):
