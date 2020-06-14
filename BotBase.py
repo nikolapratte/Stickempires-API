@@ -18,9 +18,10 @@ class BotBase(abc.ABC):
     It provides a high-level interface that allows bot creators to get specific
     information from the game."""
     # global constants
-    DEFAULT_CLICK_DELAY = 0.01
     DEFAULT_BUTTON_DELAY = 0.1
+    DEFAULT_CLICK_DELAY = 0.01
     DEFAULT_ITER_RATE = 0.3
+    DEFAULT_RETRY_DELAY = 0.1
     DEFAULT_STATE = "main"
 
     def __init__(self, topleft_coord: (int, int), botright_coord: (int, int), iter_rate: int = DEFAULT_ITER_RATE,
@@ -64,16 +65,12 @@ class BotBase(abc.ABC):
                 await self.main_menu_loop()
             if self.state == "custom":
                 await self.custom_menu_loop()
-            if self.state == "play":
-                try:
-                    # NOTE not sure if timeout will work, since asyncio wasn't interrupting
-                    # tasks fast enough before it seemed... (if they don't await)
-                    actions: List[Action] = await asyncio.wait_for(self.on_step(), self.iter_rate)
-                except asyncio.TimeoutError:
-                    actions = []
-
-                for action in actions:
-                    await action.func(action.args)
+            if self.state == "race_selection":
+                await self.race_menu_loop()
+            if self.state == "loading":
+                await self.loading_loop()
+            if self.state == "playing":
+                await self.playing_loop()
 
 
     async def main_menu_loop(self):
@@ -87,7 +84,7 @@ class BotBase(abc.ABC):
 
 
     async def custom_menu_loop(self):
-        """Bot run loop for when its in the custom match menu."""
+        """Bot run loop for custom match menu."""
         assert self.state == "custom", f"State is currently {self.state}, should be 'custom' to run bot's custom menu loop."
 
         if self.autoplay == AutoPlay.EasyChaos:
@@ -98,9 +95,41 @@ class BotBase(abc.ABC):
                 await self.wait_click(ImageName["choose_friend"], y_delta = 25)
                 await self.wait_click(ImageName["easy_chaos"])
 
+            await self.wait_click(ImageName["play_match"])
 
             self.state = "race_selection"
 
+    async def race_menu_loop(self):
+        """Bot run loop for race selection menu."""
+        assert self.state == "race_selection", f"State is currently {self.state}, should be 'race_selection' to run bot's race selection loop."
+        # TODO wait until loading screen starts to switch?
+        await self.wait_click(ImageName["order"])
+
+        self.state = "loading"
+
+
+    async def loading_loop(self):
+        """Bot's loading (players, map screen) loop."""
+        assert self.state == "loading", f"State is currently {self.state}, should be 'loading' to run bot's loading loop."
+        # TODO fix with appropriate logic to notice when loading screen is over, as well as record opponent race.
+        await asyncio.sleep(2)
+
+        self.state = "playing"
+
+
+    async def playing_loop(self):
+        """Bot's playing loop, responsible for playing the game."""
+        assert self.state == "playing", f"State is currently {self.state}, should be 'playing' to run bot's playing loop."
+        try:
+            # NOTE not sure if timeout will work, since asyncio wasn't interrupting
+            # tasks fast enough before it seemed... (if they don't await)
+            actions: List[Action] = await asyncio.wait_for(self.on_step(), self.iter_rate)
+        except asyncio.TimeoutError:
+            actions = []
+
+        for action in actions:
+            await action.func(action.args)
+            
 
     async def click(self, loc: Tuple[int, int], delay: float = DEFAULT_CLICK_DELAY, left_click: bool = True) -> None:
         """Clicks on the provided coordinate on the screen, with the provided delay between
@@ -160,7 +189,7 @@ class BotBase(abc.ABC):
         """Similar to find_click, but stalls with asyncio.sleep() until a click is successfully inputted on the
         provided image."""
         while not await self.find_click(img_name, x_delta = x_delta, y_delta = y_delta, threshold = threshold):
-            await asyncio.sleep(1)
+            await asyncio.sleep(self.DEFAULT_RETRY_DELAY)
 
 
     async def screen_record(self):

@@ -27,7 +27,10 @@ ImageName = {
 
     "easy_chaos": "images/Easy Chaos AI.PNG",
 
-    "gates": "images/Gates.PNG"
+    "gates": "images/Gates.PNG",
+
+    "order": "images/Order Empire.PNG",
+    "play_match": "images/Play Match.PNG"
 }
 
 
