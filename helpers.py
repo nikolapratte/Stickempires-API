@@ -4,6 +4,7 @@ import cv2
 
 class AutoPlay(Enum):
     """The AutoPlay enum represents autoplay options for the bot."""
+    Manual = 0
     EasyChaos = 1
 
 
@@ -21,6 +22,18 @@ class UnitType(Enum):
 
 """The ImageName dictionary contains the filenames of images used by the bot."""
 ImageName = {
+    "0": "images/0.png",
+    "1": "images/1.png",
+    "2": "images/2.png",
+    "3": "images/3.png",
+    "4": "images/4.png",
+
+    "5": "images/5.png",
+    "6": "images/6.png",
+    "7": "images/7.png",
+    "8": "images/8.png",
+    "9": "images/9.png",
+
     "choose_friend": "images/Choose Friend.PNG",
     "choose_map": "images/Choose Map.PNG",
     "custom": "images/Custom Match Button.PNG",

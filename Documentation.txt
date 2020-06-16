@@ -1,7 +1,10 @@
-Types of Actions:
+Actions:
     Build(UnitType): Builds a unit of the given UnitType. Does nothing if one 
     does not have enough resources to make the unit.
-Types of states:
+Attributes (accessed with "self." notation):
+    gold: Amount of gold. Updated with the update_res() method.
+    mana: Amount of mana. Updated with the update_res() method.
+States:
     custom: Custom match menu
     main: Main menu
     playing: In-game

@@ -7,3 +7,5 @@ others depending on your computer specs):
     openCV/cv2 (image recognition)
     ffmpeg (playing videos)
     pyautogui (screen capture)
+
+Installation guide:
