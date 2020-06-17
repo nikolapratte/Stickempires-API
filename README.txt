@@ -9,3 +9,16 @@ others depending on your computer specs):
     pyautogui (screen capture)
 
 Installation guide:
+    1. Download numpy, pyautogui ("pip install numpy", "pip install pyautogui")
+    2. Download cv2.
+        a) Go to https://www.lfd.uci.edu/~gohlke/pythonlibs/#opencv
+        b) Download the appropriate version for you.
+        c) Install the whl file using pip.
+    3. Download ffmpeg.
+        a) Download the latest ffmpeg version here: https://ffmpeg.zeranoe.com/builds/
+        b) Extract the files and put it somewhere safe (Program Files, for example)
+        c) Add the bin folder to the PATH variable
+
+        alternatively, a python ffmpeg wrapper can be installed if you would like to keep it in
+        a virtual environment. This article seemed good:
+        https://stackoverflow.com/questions/48811312/install-ffmpeg-in-to-virtual-environment 

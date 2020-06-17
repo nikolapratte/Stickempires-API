@@ -56,6 +56,15 @@ class BotBase(abc.ABC):
         self.mana = 0
 
     ### functions related to the inner workings of the bot
+    def _get_screen(self, topleft: Tuple[int, int], botright: Tuple[int, int]) -> "image":
+        """Returns the part of the screen contained within the given coordinates."""
+        screen_coords = (topleft[0], topleft[1], botright[0], botright[1])
+        screen = np.array(ImageGrab.grab(bbox=screen_coords))
+        screen = cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)
+
+        return screen
+
+
     async def main(self):
         """Main function of the bot. Manages timing of on_step, screen recording, logging, etc."""
         # setup
@@ -161,7 +170,7 @@ class BotBase(abc.ABC):
 
 
     async def screen_find(self, img_name: str, threshold: float = 0.9, all_imgs: bool = False,
-    blackwhite: int = 0) -> Tuple[int, int, int, int] or Tuple[List[int], List[int], int, int]:
+    blackwhite: int = 0, screen: "image" = None) -> Tuple[int, int, int, int] or Tuple[List[int], List[int], int, int]:
         """Finds the given image and returns its x coord, y coord, width, and height.
         If a match cannot be found, returns None.
         If multiple matches are found, returns the first match (by default).
@@ -170,16 +179,16 @@ class BotBase(abc.ABC):
             all: whether to return all matches or not. If True, return is of type Tuple[List[int], List[int], int, int],
             where the first list is x-coordinates and the second list is y-coordinates. If False, only the first match
             is returned.
-            blackwhite: Black and white threshold. Default: 0 (will not apply black and white filter)"""
-        screen_coords = (self.topleft[0], self.topleft[1],self.botright[0], self.botright[1])
-        screen = np.array(ImageGrab.grab(bbox=screen_coords))
-        screen = cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)
+            blackwhite: Black and white threshold. Default: 0 (will not apply black and white filter)
+            screen: screen image to use. Defaults to current bot screen."""
+        if screen is None:
+            screen = self._get_screen(self.topleft, self.botright)
         
-        screen = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
+        screen = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
         if blackwhite:
             _, screen = cv2.threshold(screen, blackwhite, 255, cv2.THRESH_BINARY)
 
-        template = cv2.imread(img_name, 0) # TODO for blackwhite
+        template = cv2.imread(img_name, 0)
         w, h = template.shape[::-1]
 
         res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
@@ -220,22 +229,34 @@ class BotBase(abc.ABC):
             await asyncio.sleep(self.DEFAULT_RETRY_DELAY)
 
 
+    def _highlightMatching(self, screen, screen_match, img_name, threshold: float = 0.9) -> None:
+        """Highlights the provided image of img_name where it is found on screen_match,
+        on screen (in case screen_match is different, for example grayscale or black and white)."""
+        template = cv2.imread(img_name, 0)
+        w, h = template.shape[::-1]
+
+        res = cv2.matchTemplate(screen_match, template, cv2.TM_CCOEFF_NORMED)
+        loc = np.where(res >= threshold)
+
+        for pt in zip(*loc[::-1]):
+            cv2.rectangle(screen, pt, (pt[0] + w, pt[1] + h), (0, 255, 255), 2)
+
+
+
     async def screen_record(self):
         """Shows the screen. Contrary to the function's name, this function does not record."""
         last_time = time.time()
 
         while True:
             # get current screen
-            screen_coords = (self.topleft[0], self.topleft[1],self.botright[0], self.botright[1])
-            screen = np.array(ImageGrab.grab(bbox=screen_coords))
-            screen = cv2.cvtColor(screen, cv2.COLOR_BGR2RGB)
+            screen = self._get_screen(self.topleft, self.botright)
 
             print(f"loop took {time.time() - last_time} seconds.")
             last_time = time.time()
             # process the screen a bit
             #screen = process_img(screen)
             
-            grayscale = cv2.cvtColor(screen, cv2.COLOR_BGR2GRAY)
+            grayscale = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
             _, blackwhite = cv2.threshold(grayscale, 200, 255, cv2.THRESH_BINARY)
             #retval, threshold = cv2.threshold(screen, 55, 255, cv2.THRESH_BINARY)
             #threshold = cv2.adaptiveThreshold(grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
@@ -244,20 +265,18 @@ class BotBase(abc.ABC):
             #template = cv2.imread(ImageName["0"], 0)
             #w, h = template.shape[::-1]
 
+            
             for num in "0123456789":
-                template = cv2.imread(ImageName[num], 0)
-                w, h = template.shape[::-1]
-
-                res = cv2.matchTemplate(blackwhite, template, cv2.TM_CCOEFF_NORMED)
-                threshold = 0.75
-                loc = np.where(res >= threshold)
-
-                for pt in zip(*loc[::-1]):
-                    cv2.rectangle(screen, pt, (pt[0] + w, pt[1] + h), (0, 255, 255), 2)
+                self._highlightMatching(screen, blackwhite, ImageName[num], 0.7)
+            """
+            self._highlightMatching(screen, grayscale, ImageName["gold"], 0.9)
+            self._highlightMatching(screen, grayscale, ImageName["mana"], 0.9)
+            self._highlightMatching(screen, grayscale, ImageName["supply"], 0.9)
+            """
 
             # show the screen
             cv2.imshow('original', screen)
-            cv2.imshow('blackwhite', blackwhite)
+            #cv2.imshow('blackwhite', blackwhite)
             #cv2.imshow('Thresholded', threshold)
             #cv2.imshow('window', cv2.cvtColor(screen, cv2.COLOR_BGR2RGB))
             
@@ -294,56 +313,69 @@ class BotBase(abc.ABC):
         ReleaseKey(val)
 
 
+    async def _find_numbers(self, screen_match: "image", threshold: float = 0.9) -> List[Tuple[str, int, int]]:
+        """Finds resource (gold, mana) numbers in the given image,
+        returning matches and their coordinates."""
+
+        numbers = []
+
+        for num in "0123456789":
+            res = await self.screen_find(ImageName[num], all_imgs = True, screen = screen_match, threshold = threshold, blackwhite = 200)
+
+            if res:
+                xs, ys, _, _ = res
+                numbers += [(num, x, y) for x, y in zip(xs, ys)]
+
+        if self.debug:
+            self.logger.print(f"BotBase._find_numbers: Found {numbers} numbers.")
+
+        return numbers
+
+
     async def update_res(self) -> None:
         """Updates gold and mana attributes."""
-
-        # numbers is a list of tuples of the form (number, x_coord, y_coord)
-        numbers = []
-        for num in "0123456789":
-            xs, ys, _, _ = await self.screen_find(ImageName[num], all_imgs = True)
-            numbers += [(num, x, y) for x, y in zip(xs, ys)]
         
-        numbers = sorted(numbers, key = lambda x: x[1])
+        gold_res = await self.screen_find(ImageName["gold"])
+        mana_res = await self.screen_find(ImageName["mana"])
+        supply_res = await self.screen_find(ImageName["supply"])
+
+        if gold_res and mana_res and supply_res:
+            gold_x, gold_y, _, _ = gold_res
+            mana_x, mana_y, _, mana_h = mana_res
+            supply_x, _, _, _ = supply_res
+        else:
+            if self.debug:
+                self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.")
+            return
+
+
+        # image of the space between gold and mana (with a little extra space)
+        gold_mana_img = self._get_screen((gold_x, gold_y * 0.9), (mana_x, gold_y + mana_h))
+        mana_supply_img = self._get_screen((mana_x, mana_y * 0.9), (supply_x, mana_y + mana_h))
 
         if self.debug:
-            self.logger.print(f"BotBase.update_res: numbers on screen detected are {numbers}")
+            cv2.imshow("gold_mana", gold_mana_img)
+            cv2.imshow("mana_supply", mana_supply_img)
 
-        # algorithm to find the division indicies between gold-mana, and mana-supply
-        DIVISION_LENGTH = 3 # if the difference in x-coord between two numbers is greater
-        # than this number times the last difference, then assume its a field division.
+        # sort by horizontal coordinate (left-most number have the smallest x value)
+        gold_amt = sorted(await self._find_numbers(gold_mana_img, 0.75), key = lambda x: x[1])
+        mana_amt = sorted(await self._find_numbers(mana_supply_img, 0.75), key = lambda x: x[1])
 
-        idx = 0
-        cur_val = 0
-        dif = 0
-        division_idxs = [] # division indicies are the first number in the new field
+        gold_amt_str = ''.join(num for num, _, _ in gold_amt)
+        mana_amt_str = ''.join(num for num, _, _ in mana_amt)
 
-        while True:
-            if idx >= len(numbers):
-                break
-
-            last_val = cur_val
-            cur_val = numbers[idx]
-
-            last_dif = dif
-            dif = cur_val - last_val
-
-            if idx > 0:
-                # last values won't be accurate for first index
-                if dif >= DIVISION_LENGTH*last_dif:
-                    division_idxs.append(idx)
-
-            idx += 1
-
-        # end algorithm
+        if gold_amt_str:
+            self.gold = int(gold_amt_str)
+        if mana_amt_str:
+            self.mana = int(mana_amt_str)
 
         if self.debug:
-            self.logger.print(f"BotBase.update_res: division indicies between numbers are {division_idxs}")
+            if not gold_amt_str:
+                self.logger.print("BotBase.update_res: could not detect gold.")
+            else:
+                self.logger.print(f"BotBase.update_res: {self.gold} gold detected.")
 
-        # TODO inefficient way of converting a stream of numbers into the whole number (not dealing with str more efficient)
-        self.gold = int(''.join(str(num) for num in numbers[:division_idxs[0]]))
-        self.mana = int(''.join(str(num) for num in numbers[division_idxs[0]:division_idxs[1]]))
-
-        if self.debug:
-            self.logger.print(f"BotBase.update_res: Detected {self.gold} gold and {self.mana} mana.")
-
-        
+            if not mana_amt_str:
+                self.logger.print("BotBase.update_res: could not detect mana.")
+            else:
+                self.logger.print(f"BotBase.update_res: {self.mana} mana detected.")

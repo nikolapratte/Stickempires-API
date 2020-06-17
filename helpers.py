@@ -41,9 +41,12 @@ ImageName = {
     "easy_chaos": "images/Easy Chaos AI.PNG",
 
     "gates": "images/Gates.PNG",
+    "gold": "images/gold count.png",
+    "mana": "images/mana count.png",
 
     "order": "images/Order Empire.PNG",
-    "play_match": "images/Play Match.PNG"
+    "play_match": "images/Play Match.PNG",
+    "supply": "images/supply count.png"
 }
 
 
