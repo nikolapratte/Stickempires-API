@@ -200,9 +200,9 @@ class BotBase(abc.ABC):
     async def update_res(self) -> None:
         """Updates gold and mana attributes."""
         
-        gold_res = await self.screen.screen_find(ImageName["gold"])
-        mana_res = await self.screen.screen_find(ImageName["mana"])
-        supply_res = await self.screen.screen_find(ImageName["supply"])
+        gold_res = await self.screen.screen_find(ImageName["gold"], threshold = 0.7)
+        mana_res = await self.screen.screen_find(ImageName["mana"], threshold = 0.7)
+        supply_res = await self.screen.screen_find(ImageName["supply"], threshold = 0.7)
 
         if gold_res and mana_res and supply_res:
             gold_x, gold_y, _, _ = gold_res
@@ -210,6 +210,7 @@ class BotBase(abc.ABC):
             supply_x, _, _, _ = supply_res
         else:
             if self.debug:
+                print(f"Gold: {gold_res}, mana: {mana_res}, supply: {supply_res}.")
                 self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.")
             return
 
@@ -223,8 +224,8 @@ class BotBase(abc.ABC):
             cv2.imshow("mana_supply", mana_supply_img)
 
         # sort by horizontal coordinate (left-most number have the smallest x value)
-        gold_amt = sorted(await self._find_numbers(gold_mana_img, 0.7), key = lambda x: x[1])
-        mana_amt = sorted(await self._find_numbers(mana_supply_img, 0.7), key = lambda x: x[1])
+        gold_amt = sorted(await self._find_numbers(gold_mana_img, 0.9), key = lambda x: x[1])
+        mana_amt = sorted(await self._find_numbers(mana_supply_img, 0.9), key = lambda x: x[1])
 
         gold_amt_str = ''.join(num for num, _, _ in gold_amt)
         mana_amt_str = ''.join(num for num, _, _ in mana_amt)

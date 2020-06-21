@@ -97,6 +97,7 @@ class ScreenHandler:
             
             grayscale = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
             _, blackwhite = cv2.threshold(grayscale, 200, 255, cv2.THRESH_BINARY)
+            #_, purecolors = cv2.threshold(screen, 150, 255, cv2.THRESH_BINARY)
             #retval, threshold = cv2.threshold(screen, 55, 255, cv2.THRESH_BINARY)
             #threshold = cv2.adaptiveThreshold(grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
             #retval2, threshold = cv2.threshold(grayscale, 125, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -106,8 +107,7 @@ class ScreenHandler:
 
             
             for num in "0123456789":
-                self.highlightMatching(screen, blackwhite, ImageName[num], 0.7)
-            self.highlightMatching(screen, grayscale, ImageName["play_match"], 0.7)
+                self.highlightMatching(screen, blackwhite, ImageName[num], 0.9)
             """
             self._highlightMatching(screen, grayscale, ImageName["gold"], 0.9)
             self._highlightMatching(screen, grayscale, ImageName["mana"], 0.9)
@@ -116,7 +116,7 @@ class ScreenHandler:
 
             # show the screen
             cv2.imshow('original', screen)
-            #cv2.imshow('blackwhite', blackwhite)
+            cv2.imshow('other', blackwhite)
             #cv2.imshow('Thresholded', threshold)
             #cv2.imshow('window', cv2.cvtColor(screen, cv2.COLOR_BGR2RGB))
             
