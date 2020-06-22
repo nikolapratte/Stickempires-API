@@ -96,7 +96,7 @@ class ScreenHandler:
             #screen = process_img(screen)
             
             grayscale = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
-            _, blackwhite = cv2.threshold(grayscale, 200, 255, cv2.THRESH_BINARY)
+            _, blackwhite = cv2.threshold(grayscale, 230, 255, cv2.THRESH_BINARY)
             #_, purecolors = cv2.threshold(screen, 150, 255, cv2.THRESH_BINARY)
             #retval, threshold = cv2.threshold(screen, 55, 255, cv2.THRESH_BINARY)
             #threshold = cv2.adaptiveThreshold(grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
@@ -116,7 +116,7 @@ class ScreenHandler:
 
             # show the screen
             cv2.imshow('original', screen)
-            cv2.imshow('other', blackwhite)
+            # cv2.imshow('other', blackwhite)
             #cv2.imshow('Thresholded', threshold)
             #cv2.imshow('window', cv2.cvtColor(screen, cv2.COLOR_BGR2RGB))
             
