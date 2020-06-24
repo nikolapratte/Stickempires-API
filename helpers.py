@@ -1,4 +1,15 @@
+from collections import Counter
 import cv2
+
+
+class CounterLE(Counter):
+    """Counter subclass that adds a less than or equal to function similar to how sets work (subset)."""
+    def __le__(self, other):
+        for key, amt in self.items():
+            if key not in other or amt > other[key]:
+                return False
+
+        return True
 
 
 def process_img(image):

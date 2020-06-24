@@ -12,7 +12,7 @@ import pyautogui
 
 from Action import Action
 from constants import AutoPlay, ImageName, MenuState, UnitType
-from helpers import process_img
+from helpers import CounterLE, process_img
 from InputHandler import InputHandler
 from hexkeys import HexKey
 from Logger import Logger
@@ -51,7 +51,7 @@ class BotBase(abc.ABC):
         self.debug = debug
 
         self.input = InputHandler()
-        self.logger = Logger()
+        self.logger = Logger(debug)
         self.screen = ScreenHandler(self.topleft, self.botright)
 
         self.gold = 0
@@ -181,6 +181,7 @@ class BotBase(abc.ABC):
     async def _find_numbers(self, screen_match: "image", threshold: float = 0.9) -> List[Tuple[str, int, int]]:
         """Finds resource (gold, mana) numbers in the given image,
         returning matches and their coordinates."""
+        # TODO improve by changing to priority queue, gets rid of a little waste later on in update_res
 
         numbers = []
 
@@ -191,8 +192,7 @@ class BotBase(abc.ABC):
                 xs, ys, _, _ = res
                 numbers += [(num, x, y) for x, y in zip(xs, ys)]
 
-        if self.debug:
-            self.logger.print(f"BotBase._find_numbers: Found {numbers} numbers.")
+        self.logger.print(f"BotBase._find_numbers: Found {numbers} numbers.")
 
         return numbers
 
@@ -209,9 +209,8 @@ class BotBase(abc.ABC):
             mana_x, mana_y, _, mana_h = mana_res
             supply_x, _, _, _ = supply_res
         else:
-            if self.debug:
-                print(f"Gold: {gold_res}, mana: {mana_res}, supply: {supply_res}.")
-                self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.")
+            self.logger.print(f"Gold: {gold_res}, mana: {mana_res}, supply: {supply_res}.")
+            self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.")
             return
 
 
@@ -224,8 +223,37 @@ class BotBase(abc.ABC):
             cv2.imshow("mana_supply", mana_supply_img)
 
         # sort by horizontal coordinate (left-most number have the smallest x value)
-        gold_amt = sorted(await self._find_numbers(gold_mana_img, 0.9), key = lambda x: x[1])
-        mana_amt = sorted(await self._find_numbers(mana_supply_img, 0.9), key = lambda x: x[1])
+        gold_nums = CounterLE([num for num, _, _ in await self._find_numbers(gold_mana_img, 0.7)])
+
+        # return prematurely if no numbers detected for gold
+        if len(gold_nums) == 0:
+            self.logger.print("BotBase.update_res: could not detect gold.")
+            return
+
+        # enumerate possible gold amounts
+        # TODO +20 for center
+        # maybe can check whether or not I have center
+        realistic_gold_changes = [75, 150, 225, 300]
+        # realistic_gold_changes = [20, 75, 95, 150, 170, 225, 245, 300, 320]
+        pos_golds: List[str] = [str(self.gold + x) for x in realistic_gold_changes]
+
+        self.logger.print(f"Gold numbers are: {gold_nums}")
+        self.logger.print(f"Possible gold values considered are: {pos_golds}.")
+
+        for pos_gold in pos_golds:
+            pos_gold_ctr = CounterLE(pos_gold)
+            if pos_gold_ctr <= gold_nums:
+                self.gold = int(pos_gold)
+                break
+
+        self.logger.print(f"BotBase.update_res: {self.gold} gold detected.")
+
+        # TODO return first possible match, since I'd rather have the bot use less gold
+        # than it has than more gold.
+
+        """
+        gold_amt = sorted(await self._find_numbers(gold_mana_img, 0.7), key = lambda x: x[1])
+        mana_amt = sorted(await self._find_numbers(mana_supply_img, 0.7), key = lambda x: x[1])
 
         gold_amt_str = ''.join(num for num, _, _ in gold_amt)
         mana_amt_str = ''.join(num for num, _, _ in mana_amt)
@@ -245,3 +273,5 @@ class BotBase(abc.ABC):
                 self.logger.print("BotBase.update_res: could not detect mana.")
             else:
                 self.logger.print(f"BotBase.update_res: {self.mana} mana detected.")
+
+        """
