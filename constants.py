@@ -46,6 +46,11 @@ class MenuState(Enum):
     Playing = 4
 
 
+THRESHOLDS_NUMS = {
+                0.7: "0",
+                0.8: "123456789"
+}
+
 class UnitType(Enum):
     """The UnitType enum represents units that the bot can build (as Order)."""
     Miner = "1"
@@ -57,3 +62,9 @@ class UnitType(Enum):
     Ninja = "7"
     Albow = '8'
     Giant = '9'
+
+"""UnitCost gives the cost of units as Tuple(gold, mana, supply)."""
+UnitCost = {
+    UnitType.Miner: (150, 0, 2),
+    UnitType.Sword: (125, 0, 1)
+}

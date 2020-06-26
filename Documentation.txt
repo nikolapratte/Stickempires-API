@@ -1,9 +1,18 @@
 Actions:
-    Build(UnitType): Builds a unit of the given UnitType. Does nothing if one 
-    does not have enough resources to make the unit.
+    on_step(): Abstract method, represents the running loop of the bot.
+
+    build(UnitType): Builds a unit of the given UnitType.
+    Does nothing if one does not have enough resources to make the unit.
+    
+    update_res(): Updates gold and mana attributes.
+
+
 Attributes (accessed with "self." notation):
     gold: Amount of gold. Updated with the update_res() method.
     mana: Amount of mana. Updated with the update_res() method.
+    state: Current state. Refer to the States section for types of states.
+
+
 States:
     custom: Custom match menu
     main: Main menu

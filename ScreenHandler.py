@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from PIL import ImageGrab
 
-from constants import ImageName
+from constants import ImageName, THRESHOLDS_NUMS
 
 
 class ScreenHandler:
@@ -96,7 +96,7 @@ class ScreenHandler:
             #screen = process_img(screen)
             
             grayscale = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
-            _, blackwhite = cv2.threshold(grayscale, 230, 255, cv2.THRESH_BINARY)
+            _, blackwhite = cv2.threshold(grayscale, 200, 255, cv2.THRESH_BINARY)
             #_, purecolors = cv2.threshold(screen, 150, 255, cv2.THRESH_BINARY)
             #retval, threshold = cv2.threshold(screen, 55, 255, cv2.THRESH_BINARY)
             #threshold = cv2.adaptiveThreshold(grayscale, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 115, 1)
@@ -106,8 +106,11 @@ class ScreenHandler:
             #w, h = template.shape[::-1]
 
             
-            for num in "0123456789":
-                self.highlightMatching(screen, blackwhite, ImageName[num], 0.9)
+            for threshold, nums in THRESHOLDS_NUMS.items():
+                for num in nums:
+                    self.highlightMatching(screen, blackwhite, ImageName[num], threshold)
+            #for num in "0123456789":
+            #    self.highlightMatching(screen, blackwhite, ImageName[num], 0.8)
             """
             self._highlightMatching(screen, grayscale, ImageName["gold"], 0.9)
             self._highlightMatching(screen, grayscale, ImageName["mana"], 0.9)

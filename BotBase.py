@@ -11,7 +11,7 @@ from PIL import ImageGrab
 import pyautogui
 
 from Action import Action
-from constants import AutoPlay, ImageName, MenuState, UnitType
+from constants import AutoPlay, ImageName, MenuState, THRESHOLDS_NUMS, UnitType, UnitCost
 from helpers import CounterLE, process_img
 from InputHandler import InputHandler
 from hexkeys import HexKey
@@ -25,6 +25,9 @@ class BotBase(abc.ABC):
     DEFAULT_BUTTON_DELAY = 0.1
     DEFAULT_ITER_RATE = 0.3
     DEFAULT_STATE = MenuState.Main
+
+    STARTING_GOLD = 500
+    STARTING_MANA = 0
 
     def __init__(self, topleft_coord: (int, int), botright_coord: (int, int), iter_rate: int = DEFAULT_ITER_RATE,
     state: MenuState = DEFAULT_STATE, autoplay_flg: AutoPlay = None, debug: bool = False):
@@ -54,8 +57,8 @@ class BotBase(abc.ABC):
         self.logger = Logger(debug)
         self.screen = ScreenHandler(self.topleft, self.botright)
 
-        self.gold = 0
-        self.mana = 0
+        self.gold = self.STARTING_GOLD
+        self.mana = self.STARTING_MANA
 
     ### functions related to the inner workings of the bot
 
@@ -171,6 +174,14 @@ class BotBase(abc.ABC):
     async def build(self, unit: UnitType) -> None:
         """Sends an order to build the provided unit.
         Does not do anything if the unit cannot be purchased."""
+        # only proceed if can buy the unit
+        g, m, s = UnitCost[unit]
+        if g <= self.gold:
+            self.gold -= g
+        else:
+            return
+
+
         val = HexKey[unit.value]
 
         PressKey(val)
@@ -178,19 +189,21 @@ class BotBase(abc.ABC):
         ReleaseKey(val)
 
 
-    async def _find_numbers(self, screen_match: "image", threshold: float = 0.9) -> List[Tuple[str, int, int]]:
+    async def _find_numbers(self, screen_match: "image") -> List[Tuple[str, int, int]]:
         """Finds resource (gold, mana) numbers in the given image,
         returning matches and their coordinates."""
         # TODO improve by changing to priority queue, gets rid of a little waste later on in update_res
 
         numbers = []
 
-        for num in "0123456789":
-            res = await self.screen.screen_find(ImageName[num], all_imgs = True, screen = screen_match, threshold = threshold, blackwhite = 200)
+        for threshold, nums in THRESHOLDS_NUMS.items():
+            for num in nums:
+                res = await self.screen.screen_find(ImageName[num], all_imgs = True,
+                screen = screen_match, threshold = threshold, blackwhite = 200)
 
-            if res:
-                xs, ys, _, _ = res
-                numbers += [(num, x, y) for x, y in zip(xs, ys)]
+                if res:
+                    xs, ys, _, _ = res
+                    numbers += [(num, x, y) for x, y in zip(xs, ys)]
 
         self.logger.print(f"BotBase._find_numbers: Found {numbers} numbers.")
 
@@ -223,7 +236,7 @@ class BotBase(abc.ABC):
             cv2.imshow("mana_supply", mana_supply_img)
 
         # sort by horizontal coordinate (left-most number have the smallest x value)
-        gold_nums = CounterLE([num for num, _, _ in await self._find_numbers(gold_mana_img, 0.7)])
+        gold_nums = CounterLE([num for num, _, _ in await self._find_numbers(gold_mana_img)])
 
         # return prematurely if no numbers detected for gold
         if len(gold_nums) == 0:
