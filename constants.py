@@ -45,10 +45,12 @@ class MenuState(Enum):
     Loading = 3
     Playing = 4
 
-
+"""Threshold nums represents the thresholds necessary to detect certain numbers
+(using cv2.matchThreshold)."""
 THRESHOLDS_NUMS = {
-                0.7: "0",
-                0.8: "123456789"
+                0.5: "1",
+                0.6: "0",
+                0.7: "23456789"
 }
 
 class UnitType(Enum):

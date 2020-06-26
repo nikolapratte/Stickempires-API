@@ -231,9 +231,6 @@ class BotBase(abc.ABC):
         gold_mana_img = self.screen.get_screen((gold_x, gold_y * 0.9), (mana_x, gold_y + mana_h))
         mana_supply_img = self.screen.get_screen((mana_x, mana_y * 0.9), (supply_x, mana_y + mana_h))
 
-        if self.debug:
-            cv2.imshow("gold_mana", gold_mana_img)
-            cv2.imshow("mana_supply", mana_supply_img)
 
         # sort by horizontal coordinate (left-most number have the smallest x value)
         gold_nums = CounterLE([num for num, _, _ in await self._find_numbers(gold_mana_img)])
