@@ -33,7 +33,10 @@ ImageName = {
 
     "order": "images/Order Empire.PNG",
     "play_match": "images/Play Match.PNG",
-    "supply": "images/supply count.png"
+    "supply": "images/supply count.png",
+
+
+    "500_swamp": "images/test/500_swamp_0.PNG"
 }
 
 

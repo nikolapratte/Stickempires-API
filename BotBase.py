@@ -49,14 +49,16 @@ class BotBase(abc.ABC):
         self.topleft = topleft_coord
         self.botright = botright_coord
         self.iter_rate = iter_rate
-        self.state = state
         self.autoplay = autoplay_flg
         self.debug = debug
 
-        self.input = InputHandler()
-        self.logger = Logger(debug)
-        self.screen = ScreenHandler(self.topleft, self.botright)
+        self.input: InputHandler = InputHandler()
+        self.logger: Logger = Logger(debug)
+        self.screen: ScreenHandler = ScreenHandler(self.topleft, self.botright)
 
+        # state attributes. May want to specify these during testing.
+
+        self.state = state
         self.gold = self.STARTING_GOLD
         self.mana = self.STARTING_MANA
 
@@ -189,6 +191,8 @@ class BotBase(abc.ABC):
         ReleaseKey(val)
 
 
+    # TODO stateless version of find_numbers
+
     async def _find_numbers(self, screen_match: "image") -> List[Tuple[str, int, int]]:
         """Finds resource (gold, mana) numbers in the given image,
         returning matches and their coordinates."""
@@ -210,29 +214,12 @@ class BotBase(abc.ABC):
         return numbers
 
 
-    async def update_res(self) -> None:
-        """Updates gold and mana attributes."""
-        
-        gold_res = await self.screen.screen_find(ImageName["gold"], threshold = 0.7)
-        mana_res = await self.screen.screen_find(ImageName["mana"], threshold = 0.7)
-        supply_res = await self.screen.screen_find(ImageName["supply"], threshold = 0.7)
-
-        if gold_res and mana_res and supply_res:
-            gold_x, gold_y, _, _ = gold_res
-            mana_x, mana_y, _, mana_h = mana_res
-            supply_x, _, _, _ = supply_res
-        else:
-            self.logger.print(f"Gold: {gold_res}, mana: {mana_res}, supply: {supply_res}.")
-            self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.")
-            return
-
-
-        # image of the space between gold and mana (with a little extra space)
-        gold_mana_img = self.screen.get_screen((gold_x, gold_y * 0.9), (mana_x, gold_y + mana_h))
-        mana_supply_img = self.screen.get_screen((mana_x, mana_y * 0.9), (supply_x, mana_y + mana_h))
-
-
-        # sort by horizontal coordinate (left-most number have the smallest x value)
+    async def update_gold(self, gold_mana_img: "image") -> None:
+        """Updates the gold attribute.
+        Parameters:
+            gold_mana_img: Image of the area between the gold mine and mana essence images (gold amount).
+        Relies on state:
+            self.gold"""
         gold_nums = CounterLE([num for num, _, _ in await self._find_numbers(gold_mana_img)])
 
         # return prematurely if no numbers detected for gold
@@ -257,6 +244,30 @@ class BotBase(abc.ABC):
                 break
 
         self.logger.print(f"BotBase.update_res: {self.gold} gold detected.")
+
+
+    async def update_res(self) -> None:
+        """Updates gold and mana attributes."""
+        
+        gold_res = await self.screen.screen_find(ImageName["gold"], threshold = 0.7)
+        mana_res = await self.screen.screen_find(ImageName["mana"], threshold = 0.7)
+        supply_res = await self.screen.screen_find(ImageName["supply"], threshold = 0.7)
+
+        if gold_res and mana_res and supply_res:
+            gold_x, gold_y, _, _ = gold_res
+            mana_x, mana_y, _, mana_h = mana_res
+            supply_x, _, _, _ = supply_res
+        else:
+            self.logger.print(f"Gold: {gold_res}, mana: {mana_res}, supply: {supply_res}.")
+            self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.")
+            return
+
+
+        # image of the space between gold and mana (with a little extra space)
+        gold_mana_img = self.screen.get_screen((gold_x, gold_y * 0.9), (mana_x, gold_y + mana_h))
+        mana_supply_img = self.screen.get_screen((mana_x, mana_y * 0.9), (supply_x, mana_y + mana_h))
+
+        await self.update_gold(gold_mana_img)
 
         # TODO return first possible match, since I'd rather have the bot use less gold
         # than it has than more gold.

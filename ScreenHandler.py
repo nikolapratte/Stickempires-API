@@ -54,7 +54,7 @@ class ScreenHandler:
         if blackwhite:
             _, screen = cv2.threshold(screen, blackwhite, 255, cv2.THRESH_BINARY)
 
-        template = cv2.imread(img_name, 0)
+        template = cv2.imread(img_name, cv2.IMREAD_GRAYSCALE)
         w, h = template.shape[::-1]
 
         res = cv2.matchTemplate(screen, template, cv2.TM_CCOEFF_NORMED)
@@ -119,7 +119,7 @@ class ScreenHandler:
 
             # show the screen
             cv2.imshow('original', screen)
-            # cv2.imshow('other', blackwhite)
+            cv2.imshow('other', grayscale)
             #cv2.imshow('Thresholded', threshold)
             #cv2.imshow('window', cv2.cvtColor(screen, cv2.COLOR_BGR2RGB))
             
