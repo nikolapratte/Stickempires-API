@@ -1,6 +1,6 @@
 from Action import Action
 from BotBase import BotBase
-from constants import UnitType
+from constants import Mass, UnitType
 
 class SampleBot(BotBase):
     def __init__(self, *args, **kwargs):
@@ -20,5 +20,9 @@ class SampleBot(BotBase):
             else:
                 actions.append(Action(self.build, UnitType.Sword))
                 self.unit_val = 0
+
+        # mass actions
+
+        actions.append(Action(self.mass, Mass.Attack))
 
         return actions

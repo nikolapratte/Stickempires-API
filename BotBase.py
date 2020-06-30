@@ -11,7 +11,7 @@ from PIL import ImageGrab
 import pyautogui
 
 from Action import Action
-from constants import AutoPlay, ImageName, MenuState, THRESHOLDS_NUMS, UnitType, UnitCost
+from constants import AutoPlay, ImageName, Mass, MenuState, THRESHOLDS_NUMS, UnitType, UnitCost
 from helpers import CounterLE, process_img
 from InputHandler import InputHandler
 from hexkeys import HexKey
@@ -56,12 +56,13 @@ class BotBase(abc.ABC):
         self.logger: Logger = Logger(debug)
         self.screen: ScreenHandler = ScreenHandler(self.topleft, self.botright)
 
-        # state attributes. May want to specify these during testing.
+        ### state attributes. May want to specify these during testing.
 
-        self.state = state
-        self.gold = self.STARTING_GOLD
-        self.mana = self.STARTING_MANA
-
+        self.gold: int = self.STARTING_GOLD
+        self.mana: int = self.STARTING_MANA
+        self.on_left: bool = True
+        self.state: MenuState = state
+        
     ### functions related to the inner workings of the bot
 
 
@@ -191,7 +192,12 @@ class BotBase(abc.ABC):
         ReleaseKey(val)
 
 
-    # TODO stateless version of find_numbers
+    async def mass(self, option: Mass) -> None:
+        """Sends one of the mass unit orders (garrison, defend, attack)."""
+        if self.on_left:
+            if option == Mass.Attack:
+                await self.input.wait_click(self.screen, ImageName["right_mass"])
+        
 
     async def _find_numbers(self, screen_match: "image") -> List[Tuple[str, int, int]]:
         """Finds resource (gold, mana) numbers in the given image,
@@ -268,31 +274,3 @@ class BotBase(abc.ABC):
         mana_supply_img = self.screen.get_screen((mana_x, mana_y * 0.9), (supply_x, mana_y + mana_h))
 
         await self.update_gold(gold_mana_img)
-
-        # TODO return first possible match, since I'd rather have the bot use less gold
-        # than it has than more gold.
-
-        """
-        gold_amt = sorted(await self._find_numbers(gold_mana_img, 0.7), key = lambda x: x[1])
-        mana_amt = sorted(await self._find_numbers(mana_supply_img, 0.7), key = lambda x: x[1])
-
-        gold_amt_str = ''.join(num for num, _, _ in gold_amt)
-        mana_amt_str = ''.join(num for num, _, _ in mana_amt)
-
-        if gold_amt_str:
-            self.gold = int(gold_amt_str)
-        if mana_amt_str:
-            self.mana = int(mana_amt_str)
-
-        if self.debug:
-            if not gold_amt_str:
-                self.logger.print("BotBase.update_res: could not detect gold.")
-            else:
-                self.logger.print(f"BotBase.update_res: {self.gold} gold detected.")
-
-            if not mana_amt_str:
-                self.logger.print("BotBase.update_res: could not detect mana.")
-            else:
-                self.logger.print(f"BotBase.update_res: {self.mana} mana detected.")
-
-        """

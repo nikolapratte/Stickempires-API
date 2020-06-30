@@ -29,15 +29,29 @@ ImageName = {
 
     "gates": "images/Gates.PNG",
     "gold": "images/gold count.png",
+    "left_mass": "images/left_mass.PNG", # garrison if bot spawns on left side of game, advance if right
+    "left_mass_miner": "images/left_mass_miner.PNG",
     "mana": "images/mana count.png",
+    "mass_defend": "images/mass_defend.PNG",
 
     "order": "images/Order Empire.PNG",
     "play_match": "images/Play Match.PNG",
     "supply": "images/supply count.png",
+    "right_mass": "images/right_mass.PNG",
+    "right_mass_miner": "images/right_mass_miner.PNG",
 
 
     "500_swamp": "images/test/500_swamp_0.PNG"
 }
+
+
+class Mass(Enum):
+    """The Mass enum has different mass action options (garrison, defend, attack)."""
+    Garrison = 0
+    Defend = 1
+    Attack = 2
+    MinerGarrison = 3
+    MinerAdvance = 4
 
 
 class MenuState(Enum):

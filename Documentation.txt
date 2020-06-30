@@ -1,8 +1,10 @@
-Actions:
+BotBase Actions:
     on_step(): Abstract method, represents the running loop of the bot.
 
-    build(UnitType): Builds a unit of the given UnitType.
+    build(unit: UnitType): Builds a unit of the given UnitType.
     Does nothing if one does not have enough resources to make the unit.
+
+    mass(option: Mass): Inputs a mass action command (garrison, defend, attack).
     
     update_res(): Updates gold and mana attributes.
 
