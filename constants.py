@@ -32,7 +32,7 @@ ImageName = {
     "left_mass": "images/left_mass.PNG", # garrison if bot spawns on left side of game, advance if right
     "left_mass_miner": "images/left_mass_miner.PNG",
     "mana": "images/mana count.png",
-    "mass_defend": "images/mass_defend.PNG",
+    "defend_mass": "images/mass_defend.PNG",
 
     "order": "images/Order Empire.PNG",
     "play_match": "images/Play Match.PNG",

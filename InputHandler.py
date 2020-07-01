@@ -18,7 +18,7 @@ class InputHandler:
     async def click(self, loc: Tuple[int, int], delay: float = DEFAULT_CLICK_DELAY, left_click: bool = True) -> None:
         """Clicks on the provided coordinate on the screen, with the provided delay between
         pressing down and lifting up."""
-        print(f"Location is {loc}.")
+        #print(f"Location is {loc}.")
 
         if left_click:
             pyautogui.mouseDown(*loc, button='left')

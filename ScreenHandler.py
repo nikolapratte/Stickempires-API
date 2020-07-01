@@ -96,9 +96,11 @@ class ScreenHandler:
             grayscale = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
             _, blackwhite = cv2.threshold(grayscale, 200, 255, cv2.THRESH_BINARY)
 
-            for name in ("left_mass", "left_mass_miner", "right_mass", "right_mass_miner"):
+            for name in ("left_mass", "right_mass"):
                 self.highlightMatching(screen, grayscale, ImageName[name])
-            self.highlightMatching(screen, grayscale, ImageName["mass_defend"], 0.85)
+            self.highlightMatching(screen, grayscale, ImageName["defend_mass"], 0.85)
+            for name in ("left_mass_miner", "right_mass_miner"):
+                self.highlightMatching(screen, grayscale, ImageName[name], 0.6)
 
 
             # show the screen

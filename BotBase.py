@@ -194,9 +194,20 @@ class BotBase(abc.ABC):
 
     async def mass(self, option: Mass) -> None:
         """Sends one of the mass unit orders (garrison, defend, attack)."""
-        if self.on_left:
-            if option == Mass.Attack:
-                await self.input.wait_click(self.screen, ImageName["right_mass"])
+        # NOTE not sure if wait_click is needed... (its alright if the operation fails maybe)
+        if option == Mass.Defend:
+            await self.input.wait_click(self.screen, ImageName["defend_mass"], threshold = 0.85)
+
+        if option == Mass.Attack:
+            await self.input.wait_click(self.screen, ImageName["right_mass" if self.on_left else "left_mass"])
+        if option == Mass.Garrison:
+            await self.input.wait_click(self.screen, ImageName["left_mass" if self.on_left else "right_mass"])
+        if option == Mass.MinerAdvance:
+            await self.input.wait_click(self.screen,
+            ImageName["right_mass_miner" if self.on_left else "left_mass_miner"], threshold = 0.6)
+        if option == Mass.MinerGarrison:
+            await self.input.wait_click(self.screen,
+            ImageName["left_mass_miner" if self.on_left else "right_mass_miner"], threshold = 0.6)
         
 
     async def _find_numbers(self, screen_match: "image") -> List[Tuple[str, int, int]]:
