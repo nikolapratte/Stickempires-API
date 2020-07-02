@@ -78,7 +78,9 @@ class ScreenHandler:
         res = cv2.matchTemplate(screen_match, template, cv2.TM_CCOEFF_NORMED)
         loc = np.where(res >= threshold)
 
+        print("printing points")
         for pt in zip(*loc[::-1]):
+            print(pt)
             cv2.rectangle(screen, pt, (pt[0] + w, pt[1] + h), (0, 255, 255), 2)
 
     
@@ -96,11 +98,7 @@ class ScreenHandler:
             grayscale = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
             _, blackwhite = cv2.threshold(grayscale, 200, 255, cv2.THRESH_BINARY)
 
-            for name in ("left_mass", "right_mass"):
-                self.highlightMatching(screen, grayscale, ImageName[name])
-            self.highlightMatching(screen, grayscale, ImageName["defend_mass"], 0.85)
-            for name in ("left_mass_miner", "right_mass_miner"):
-                self.highlightMatching(screen, grayscale, ImageName[name], 0.6)
+            self.highlightMatching(screen, grayscale, ImageName["enemy_crawler"], threshold = 0.8)
 
 
             # show the screen

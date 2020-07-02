@@ -26,6 +26,7 @@ ImageName = {
     "custom": "images/Custom Match Button.PNG",
 
     "easy_chaos": "images/Easy Chaos AI.PNG",
+    "enemy_crawler": "images/enemy_crawler.png",
 
     "gates": "images/Gates.PNG",
     "gold": "images/gold count.png",
