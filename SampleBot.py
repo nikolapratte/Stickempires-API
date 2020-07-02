@@ -8,6 +8,7 @@ class SampleBot(BotBase):
         self.unit_val = 0
         self.iteration = 0
 
+
     async def on_step(self):
         ### build() example: alternate between making miners and swords 
         actions = []

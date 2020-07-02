@@ -2,7 +2,7 @@ import abc
 import asyncio
 from collections import defaultdict
 import time
-from typing import List, Tuple
+from typing import List, Set, Tuple
 
 import cv2
 from directkeys import PressKey, ReleaseKey
@@ -15,7 +15,7 @@ from constants import AutoPlay, ImageName, Mass, MenuState, THRESHOLDS_NUMS, Uni
 from helpers import CounterLE, process_img
 from InputHandler import InputHandler
 from hexkeys import HexKey
-from Logger import Logger
+from Logger import LFlag, Logger
 from ScreenHandler import ScreenHandler
 
 class BotBase(abc.ABC):
@@ -29,8 +29,9 @@ class BotBase(abc.ABC):
     STARTING_GOLD = 500
     STARTING_MANA = 0
 
-    def __init__(self, topleft_coord: (int, int), botright_coord: (int, int), iter_rate: int = DEFAULT_ITER_RATE,
-    state: MenuState = DEFAULT_STATE, autoplay_flg: AutoPlay = None, debug: bool = False):
+    def __init__(self, topleft_coord: Tuple[int, int], botright_coord: Tuple[int, int], iter_rate: int = DEFAULT_ITER_RATE,
+    state: MenuState = DEFAULT_STATE, autoplay_flg: AutoPlay = None, debug: bool = False,
+    debug_flags: LFlag or Set[LFlag] = None):
         """
         Params:
             topleft_coord: Top left coordinate of the stickempires game window (not entire browser).
@@ -39,6 +40,7 @@ class BotBase(abc.ABC):
             state: Name of state the bot will be started in. Default: main menu
             autoplay: Whether or not to have the bot automatically do something. Default: None (no)
             debug: Whether or not to have debug messages on. Default: False
+            debug_flags: Flags to examine for debug. Default: None (all flags)
             
         Notes:
             If iter_rate is too low, actions might start getting missed.
@@ -53,7 +55,7 @@ class BotBase(abc.ABC):
         self.debug = debug
 
         self.input: InputHandler = InputHandler()
-        self.logger: Logger = Logger(debug)
+        self.logger: Logger = Logger(debug, debug_flags)
         self.screen: ScreenHandler = ScreenHandler(self.topleft, self.botright)
 
         ### state attributes. May want to specify these during testing.
@@ -226,7 +228,7 @@ class BotBase(abc.ABC):
                     xs, ys, _, _ = res
                     numbers += [(num, x, y) for x, y in zip(xs, ys)]
 
-        self.logger.print(f"BotBase._find_numbers: Found {numbers} numbers.")
+        self.logger.print(f"BotBase._find_numbers: Found {numbers} numbers.", LFlag.Resources)
 
         return numbers
 
@@ -241,7 +243,7 @@ class BotBase(abc.ABC):
 
         # return prematurely if no numbers detected for gold
         if len(gold_nums) == 0:
-            self.logger.print("BotBase.update_res: could not detect gold.")
+            self.logger.print("BotBase.update_res: could not detect gold.", LFlag.Resources)
             return
 
         # enumerate possible gold amounts
@@ -251,8 +253,8 @@ class BotBase(abc.ABC):
         # realistic_gold_changes = [20, 75, 95, 150, 170, 225, 245, 300, 320]
         pos_golds: List[str] = [str(self.gold + x) for x in realistic_gold_changes]
 
-        self.logger.print(f"Gold numbers are: {gold_nums}")
-        self.logger.print(f"Possible gold values considered are: {pos_golds}.")
+        self.logger.print(f"Gold numbers are: {gold_nums}", LFlag.Resources)
+        self.logger.print(f"Possible gold values considered are: {pos_golds}.", LFlag.Resources)
 
         for pos_gold in pos_golds:
             pos_gold_ctr = CounterLE(pos_gold)
@@ -260,7 +262,7 @@ class BotBase(abc.ABC):
                 self.gold = int(pos_gold)
                 break
 
-        self.logger.print(f"BotBase.update_res: {self.gold} gold detected.")
+        self.logger.print(f"BotBase.update_res: {self.gold} gold detected.", LFlag.Resources)
 
 
     async def update_res(self) -> None:
@@ -275,8 +277,8 @@ class BotBase(abc.ABC):
             mana_x, mana_y, _, mana_h = mana_res
             supply_x, _, _, _ = supply_res
         else:
-            self.logger.print(f"Gold: {gold_res}, mana: {mana_res}, supply: {supply_res}.")
-            self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.")
+            self.logger.print(f"Gold: {gold_res}, mana: {mana_res}, supply: {supply_res}.", LFlag.Resources)
+            self.logger.print("BotBase.update_res: Unable to find gold, mana, or supply images.", LFlag.Resources)
             return
 
 
