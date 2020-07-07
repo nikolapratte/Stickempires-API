@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from PIL import ImageGrab
 
 from constants import ImageName, THRESHOLDS_NUMS
@@ -83,6 +84,36 @@ class ScreenHandler:
             print(pt)
             cv2.rectangle(screen, pt, (pt[0] + w, pt[1] + h), (0, 255, 255), 2)
 
+        
+    def featureMatching(self, screen, screen_match, img_name) -> None:
+        """Performs feature matching as shown on the OpenCV tutorial page."""
+        print("starting")
+        orb = cv2.ORB_create()
+
+        print("a")
+        img2 = cv2.imread(img_name, cv2.IMREAD_GRAYSCALE)
+
+        print("b")
+        kp1, des1 = orb.detectAndCompute(screen_match, None)
+        kp2, des2 = orb.detectAndCompute(img2, None)
+
+        print("c")
+        bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck = True)
+
+        print("d")
+        matches = bf.match(des1, des2)
+
+        print("e")
+        matches = sorted(matches, key = lambda x: x.distance)
+        print("f")
+
+        img3 = cv2.drawMatches(screen_match, kp1, img2, kp2, matches[:10], flags = 2)
+
+        plt.imshow(img3)
+        plt.show()
+
+        print("got to the end of feature matching")
+
     
     async def show(self):
         """Shows the screen."""
@@ -98,8 +129,7 @@ class ScreenHandler:
             grayscale = cv2.cvtColor(screen, cv2.COLOR_RGB2GRAY)
             _, blackwhite = cv2.threshold(grayscale, 200, 255, cv2.THRESH_BINARY)
 
-            self.highlightMatching(screen, grayscale, ImageName["enemy_crawler"], threshold = 0.8)
-
+            self.highlightMatching(screen, grayscale, ImageName["archer"], threshold = 0.7)
 
             # show the screen
             cv2.imshow('original', screen)

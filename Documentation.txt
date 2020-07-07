@@ -9,10 +9,15 @@ BotBase Actions:
     update_res(): Updates gold and mana attributes.
 
 
-Attributes (accessed with "self." notation):
+BotBase Attributes (accessed with "self." notation):
     gold: Amount of gold. Updated with the update_res() method.
     mana: Amount of mana. Updated with the update_res() method.
     state: Current state. Refer to the States section for types of states.
+
+
+Debug:
+    use the Logger class to debug things.
+    also, use the show function in ScreenHandler for image recognition debugging.
 
 
 States:

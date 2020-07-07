@@ -21,8 +21,11 @@ ImageName = {
     "8": "images/8.png",
     "9": "images/9.png",
 
+    "archer": "images/archer.png",
+
     "choose_friend": "images/Choose Friend.PNG",
     "choose_map": "images/Choose Map.PNG",
+    "crawler_health_bar": "images/crawler_health_bar.png",
     "custom": "images/Custom Match Button.PNG",
 
     "easy_chaos": "images/Easy Chaos AI.PNG",
