@@ -5,7 +5,7 @@ those details of the game so bot makers can focus on higher-level details.
 For developers, I have included:
     - An installation guide for getting the necessary libraries.
     - Documentation for what functionality currently exists in the API.
-    - Tutorial covering some points I didn't cover elsewhere: https://youtu.be/URPfOzxQBEg.
+    - Tutorial covering some points I didn't cover elsewhere: https://youtu.be/URPfOzxQBEg
 
 Challenges solved:
     1. Clicking various buttons on the screen (i.e. "Play Match").
